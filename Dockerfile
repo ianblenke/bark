@@ -1,7 +1,9 @@
-FROM debian:stable
+FROM nvidia/cuda:11.8.0-devel-ubuntu22.04
+#FROM debian:stable
 
 # Install system packages
-RUN apt update && apt install -y git pip
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt update && apt install -y git python3-full python3-pip
 
 # Create non-root user
 RUN useradd -m -d /bark bark
@@ -16,12 +18,16 @@ RUN git clone https://github.com/C0untFloyd/bark-gui
 # Switch to git directory
 WORKDIR /bark/bark-gui
 
+# Create venv
+RUN python3 -m venv /bark/venv
+
 # Append pip bin path to PATH
-ENV PATH=$PATH:/bark/.local/bin
+ENV PATH=/bark/venv/bin:$PATH
 
 # Install dependancies
 RUN pip install .
 RUN pip install -r requirements.txt
+RUN pip install tensorboardX
 
 # List on all addresses, since we are in a container.
 RUN sed -i "s/server_name: ''/server_name: 0.0.0.0/g" ./config.yaml
